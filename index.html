@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RealTimeChatWave | Socket.IO Demo</title>
+    <!-- Load Tailwind CSS for minimalistic styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Inter font -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen p-4">
+
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#4f46e5',
+                        'primary-dark': '#4338ca',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Main Chat Container (Responsive) -->
+    <div class="w-full max-w-2xl bg-white shadow-xl rounded-2xl overflow-hidden flex flex-col h-[90vh] md:h-[80vh]">
+        
+        <!-- Header & Status -->
+        <header class="p-4 bg-primary text-white shadow-md flex justify-between items-center">
+            <h1 class="text-xl font-bold">RealTimeChatWave</h1>
+            <div id="status-indicator" class="flex items-center space-x-2 text-sm">
+                <span id="status-text">Connecting...</span>
+                <span id="status-dot" class="w-3 h-3 rounded-full bg-yellow-400"></span>
+            </div>
+        </header>
+
+        <!-- Message Display Area (Chat Log) -->
+        <div id="messages" class="flex-grow p-4 overflow-y-auto space-y-3 bg-gray-50/70">
+            <!-- Messages will be appended here -->
+            <div class="text-center text-sm text-gray-400 p-2">
+                <p>Welcome! Open this page in another tab to start a conversation.</p>
+            </div>
+        </div>
+
+        <!-- User Information and Input Form -->
+        <div class="p-4 border-t border-gray-200">
+            <p id="user-info" class="text-sm text-gray-600 mb-2">Your ID: Loading...</p>
+            <p id="user-count" class="text-xs text-gray-500 mb-4">Active Users: 0</p>
+            
+            <form id="form" class="flex space-x-3">
+                <input id="input" type="text" placeholder="Type your message..." autocomplete="off" 
+                       class="flex-grow p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition duration-150" 
+                       required>
+                <button type="submit" 
+                        class="px-6 py-3 bg-primary text-white font-semibold rounded-lg shadow-md hover:bg-primary-dark transition duration-150 ease-in-out disabled:opacity-50"
+                        id="send-button">
+                    Send
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Load Socket.IO Client Library -->
+    <script src="/socket.io/socket.io.js"></script>
+    
+    <script>
+        // --- Client-Side Socket.IO Logic ---
+
+        // 1. DEFINE THE EXTERNAL BACKEND URL HERE
+        // !!! IMPORTANT: Replace 'https://YOUR_RENDER_BACKEND_URL_HERE' with the URL Render/Railway gives you after deployment.
+        const BACKEND_SERVER_URL = 'https://YOUR_RENDER_BACKEND_URL_HERE'; 
+        
+        // Establish the connection using the absolute URL
+        const socket = io(BACKEND_SERVER_URL); 
+
+        // DOM elements
+        const form = document.getElementById('form');
+        const input = document.getElementById('input');
+        const messages = document.getElementById('messages');
+        const statusDot = document.getElementById('status-dot');
+        const statusText = document.getElementById('status-text');
+        const userInfo = document.getElementById('user-info');
+        const userCountElement = document.getElementById('user-count');
+        const sendButton = document.getElementById('send-button');
+
+        let myUserId = 'Anonymous';
+
+        /**
+         * Renders a message element into the chat log.
+         * @param {string} id - The sender's ID.
+         * @param {string} message - The message content.
+         * @param {string} timestamp - The time the message was sent.
+         */
+        function renderMessage(id, message, timestamp) {
+            const isMe = id === myUserId;
+            const isSystem = id === 'System';
+
+            const messageWrapper = document.createElement('div');
+            messageWrapper.className = isSystem ? 
+                'text-center text-xs italic text-gray-500' : 
+                `flex ${isMe ? 'justify-end' : 'justify-start'}`;
+
+            if (isSystem) {
+                messageWrapper.innerHTML = `<span>[${timestamp}] ${message}</span>`;
+            } else {
+                const messageBubble = document.createElement('div');
+                messageBubble.className = `max-w-xs md:max-w-md p-3 rounded-xl shadow-sm ${
+                    isMe 
+                        ? 'bg-primary text-white rounded-br-none' 
+                        : 'bg-white text-gray-800 rounded-tl-none border border-gray-200'
+                }`;
+                
+                messageBubble.innerHTML = `
+                    <div class="font-semibold text-xs mb-1 ${isMe ? 'text-indigo-200' : 'text-primary-dark'}">${id}</div>
+                    <p class="whitespace-pre-wrap">${message}</p>
+                    <div class="text-right text-xs mt-1 ${isMe ? 'text-indigo-300' : 'text-gray-400'}">${timestamp}</div>
+                `;
+                messageWrapper.appendChild(messageBubble);
+            }
+
+            messages.appendChild(messageWrapper);
+            // Auto-scroll to the bottom for the latest message
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        // --- Event Listeners ---
+
+        // 1. Handle form submission (sending a message)
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const text = input.value.trim();
+            if (text) {
+                // Emit the 'chat message' event to the server
+                socket.emit('chat message', { id: myUserId, text: text });
+                input.value = ''; // Clear the input field
+                input.focus();
+            }
+        });
+
+        // 2. Listen for 'chat message' event from the server
+        socket.on('chat message', function(msg) {
+            // Render the message received from the server (either broadcast or self-echo)
+            renderMessage(msg.id, msg.message, msg.timestamp);
+        });
+
+        // 3. Listen for connection status updates
+        socket.on('status update', function(data) {
+            if (data.status === 'Connected' || data.status === 'Updated') {
+                statusDot.classList.remove('bg-yellow-400', 'bg-red-500');
+                statusDot.classList.add('bg-green-500');
+                statusText.textContent = 'Connected';
+                sendButton.disabled = false;
+                
+                if (data.userId) {
+                    myUserId = data.userId;
+                    userInfo.textContent = `Your ID: ${myUserId}`;
+                }
+                if (data.userCount !== undefined) {
+                    userCountElement.textContent = `Active Users: ${data.userCount}`;
+                }
+            }
+        });
+
+
+        // 4. Handle initial connection
+        socket.on('connect', function() {
+            // Note: Status update will come from the server, but this sets the initial state
+            statusDot.classList.remove('bg-red-500');
+            statusDot.classList.add('bg-yellow-400');
+            statusText.textContent = 'Connecting...';
+            sendButton.disabled = true;
+        });
+
+        // 5. Handle disconnection
+        socket.on('disconnect', function() {
+            statusDot.classList.remove('bg-green-500', 'bg-yellow-400');
+            statusDot.classList.add('bg-red-500');
+            statusText.textContent = 'Disconnected';
+            sendButton.disabled = true;
+            renderMessage('System', 'Lost connection to the server. Attempting to reconnect...', new Date().toLocaleTimeString());
+            userCountElement.textContent = 'Active Users: 0';
+        });
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+    "name": "realtime-websocket-chat",
+    "version": "1.0.0",
+    "description": "A minimalistic, real-time chat application using Socket.IO.",
+    "main": "server.js",
+    "scripts": {
+    "start": "node server.js"
+    },
+    "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+    }
+    }
