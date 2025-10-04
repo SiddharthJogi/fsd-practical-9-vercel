@@ -10,7 +10,7 @@ const server = http.createServer(app);
 // 1. Define the Vercel Frontend URL for CORS
 // !!! IMPORTANT: Replace 'https://YOUR_VERCEL_FRONTEND_URL_HERE' with the URL Vercel gives you.
 // Example: 'https://my-chat-app.vercel.app'
-const VERCEL_FRONTEND_URL = 'https://YOUR_VERCEL_FRONTEND_URL_HERE';
+const VERCEL_FRONTEND_URL = 'https://fsd-practical-9-vercel1.vercel.app/';
 
 // Initialize Socket.IO and configure specific CORS origin
 const io = new Server(server, {
