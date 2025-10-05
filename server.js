@@ -7,6 +7,9 @@ const { Server } = require('socket.io');
 const app = express();
 const server = http.createServer(app);
 
+// Serve static files (including index.html)
+app.use(express.static('.'));
+
 // 1. Define the Frontend URL for CORS using environment variable
 // This will be set by the deployment platform
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -23,9 +26,6 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 3000; // Use environment variable for hosting platforms
 let userCount = 0; // Simple counter to assign a generic ID to clients
-
-// NOTE: The static file serving (app.get('/')) has been removed. 
-// Vercel will serve index.html, and this server only handles Socket.IO.
 
 
 // --- Socket.IO Real-Time Logic ---
