@@ -73,13 +73,23 @@
         // --- Client-Side Socket.IO Logic ---
 
         // 1. DEFINE THE BACKEND URL
-        // This will be automatically detected based on the environment
+        // Use Render backend for production, localhost for development
         const BACKEND_SERVER_URL = window.location.hostname === 'localhost' 
             ? 'http://localhost:3000' 
-            : window.location.origin;
+            : 'https://your-render-backend-url.onrender.com';
         
-        // Establish the connection using the appropriate URL
-        const socket = io(BACKEND_SERVER_URL); 
+        // Establish the connection with better configuration for stability
+        const socket = io(BACKEND_SERVER_URL, {
+            transports: ['websocket', 'polling'],
+            upgrade: true,
+            rememberUpgrade: true,
+            timeout: 20000,
+            forceNew: false,
+            reconnection: true,
+            reconnectionDelay: 1000,
+            reconnectionAttempts: 5,
+            maxReconnectionAttempts: 5
+        }); 
 
         // DOM elements
         const form = document.getElementById('form');

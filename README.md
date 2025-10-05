@@ -32,28 +32,35 @@ A real-time chat application built with Node.js, Express, and Socket.IO. This ap
 
 ## Deployment
 
-### Option 1: Deploy to Vercel (Full Stack)
+### Recommended: Split Deployment (Backend on Render + Frontend on Vercel)
 
-1. Push your code to GitHub
-2. Connect your repository to Vercel
-3. Set the environment variable `FRONTEND_URL` to your Vercel app URL
-4. Deploy!
+**Why this setup?** Vercel's serverless architecture has limitations with WebSocket connections, causing frequent disconnections. Render provides better WebSocket support.
 
-### Option 2: Deploy Backend to Render + Frontend to Vercel
-
-#### Backend (Render):
+#### Step 1: Deploy Backend to Render
 1. Push your code to GitHub
 2. Connect your repository to Render
 3. Create a new Web Service
 4. Set the following environment variables:
    - `NODE_ENV`: `production`
-   - `FRONTEND_URL`: `https://your-vercel-app.vercel.app`
-5. Deploy!
+   - `FRONTEND_URL`: `https://your-vercel-app.vercel.app` (update after frontend deployment)
+5. Deploy and note your Render URL (e.g., `https://your-app.onrender.com`)
 
-#### Frontend (Vercel):
-1. Push your code to GitHub
-2. Connect your repository to Vercel
-3. Deploy!
+#### Step 2: Update Frontend Configuration
+1. In `index.html`, replace `https://your-render-backend-url.onrender.com` with your actual Render URL
+2. Commit and push the changes
+
+#### Step 3: Deploy Frontend to Vercel
+1. Connect your repository to Vercel
+2. Deploy (no environment variables needed for frontend)
+3. Note your Vercel URL (e.g., `https://your-app.vercel.app`)
+
+#### Step 4: Update Backend CORS
+1. Go back to Render dashboard
+2. Update the `FRONTEND_URL` environment variable to your Vercel URL
+3. Redeploy the backend
+
+### Alternative: Full Stack on Vercel (Limited WebSocket Support)
+⚠️ **Not recommended** due to WebSocket connection instability on Vercel's serverless platform.
 
 ## Environment Variables
 
