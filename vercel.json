@@ -19,8 +19,5 @@
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ],
-  "env": {
-    "FRONTEND_URL": "@frontend_url"
-  }
+  ]
 }
