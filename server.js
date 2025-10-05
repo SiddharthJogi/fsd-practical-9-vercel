@@ -7,17 +7,17 @@ const { Server } = require('socket.io');
 const app = express();
 const server = http.createServer(app);
 
-// 1. Define the Vercel Frontend URL for CORS
-// !!! IMPORTANT: Replace 'https://YOUR_VERCEL_FRONTEND_URL_HERE' with the URL Vercel gives you.
-// Example: 'https://my-chat-app.vercel.app'
-const VERCEL_FRONTEND_URL = 'https://fsd-practical-9-vercel1.vercel.app/';
+// 1. Define the Frontend URL for CORS using environment variable
+// This will be set by the deployment platform
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
-// Initialize Socket.IO and configure specific CORS origin
+// Initialize Socket.IO and configure CORS origin
 const io = new Server(server, {
   cors: {
-    // Only allow connections from the specific Vercel frontend URL for security
-    origin: VERCEL_FRONTEND_URL, 
-    methods: ["GET", "POST"]
+    // Allow connections from the frontend URL (set via environment variable)
+    origin: FRONTEND_URL, 
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
@@ -95,7 +95,7 @@ io.on('connection', (socket) => {
 // Start the server
 server.listen(PORT, () => {
   console.log(`Server running and listening on port ${PORT}`);
-  console.log(`Ready for real-time WebSocket communication. Set CORS origin to: ${VERCEL_FRONTEND_URL}`);
+  console.log(`Ready for real-time WebSocket communication. CORS origin set to: ${FRONTEND_URL}`);
 });
 
 // Global error handling
